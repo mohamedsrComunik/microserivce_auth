@@ -1,0 +1,49 @@
+version: '3'
+services:
+    auth-srv:
+        build: .
+        container_name: "auth-srv"
+        environment: 
+            - DB_USER=${DB_USER}
+            - DB_PASSWORD=${DB_PASSWORD}
+            - DB_NAME=${DB_NAME}
+        ports:
+            - 8080:8080
+        depends_on:
+            - mysql_service
+    mysql_service:
+        container_name: "mysql_service"
+        image: mysql:5.7
+        restart: always
+        environment:
+          MYSQL_DATABASE: ${DB_NAME}
+          # So you don't have to use root, but you can if you like
+          MYSQL_USER: ${DB_USER}
+          # You can use whatever password you like
+          MYSQL_PASSWORD: ${DB_PASSWORD}
+          # Password for root access
+          MYSQL_ROOT_PASSWORD: ${DB_PASSWORD_ROOT}
+        ports:
+          # <Port exposed> : < MySQL Port running inside container>
+          - '3306:3306'
+        expose:
+          # Opens port 3306 on the container
+          - '3306'
+          # Where our data will be persisted
+        volumes:
+          - my-db:/var/lib/mysql
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        depends_on: 
+            - mysql_service
+        ports:
+            - 8081:80
+        links: 
+            - mysql_service:db
+        environment:
+            MYSQL_USER: ${DB_USER}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD_ROOT}
+# Names our volume
+volumes:
+    my-db:
